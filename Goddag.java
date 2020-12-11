@@ -4,6 +4,23 @@ import robocode.*;
 // API help : https://robocode.sourceforge.io/docs/robocode/robocode/JuniorRobot.html
 
 /**
+ * Goddag - a robot by (your name here)
+ */
+public class Goddag extends JuniorRobot
+{
+	/**
+	 * run: Goddag's default behavior
+	 */
+	public void run() {
+		// Initialization of the robot should be put here
+		
+		
+		// Some color codes: blue, yellow, black, white, red, pink, brown, grey, orange...
+		// Sets these colors (robot parts): body, gun, radar, bullet, scan_arc
+		setColors(purple, purple, blue, black, black);
+
+		// Robot main loop
+		while (true) {
 			turnGunRight(360);
 			ahead(100);
 			// Repeat.
