@@ -1,0 +1,223 @@
+package prog2;
+
+import robocode.JuniorRobot;
+import robocode.Robot;
+import robocode.ScannedRobotEvent;
+
+//
+// Source code recreated from a .class file by IntelliJ IDEA
+// (powered by FernFlower decompiler)
+//
+
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.geom.Point2D.Double;
+import robocode.AdvancedRobot;
+import robocode.DeathEvent;
+import robocode.ScannedRobotEvent;
+import robocode.util.Utils;
+
+public class nikolaiRobot extends AdvancedRobot {
+    static int depth = 200;
+    static boolean depthChange = true;
+    static double[][] enemyVelocities;
+    static int currentEnemyVelocity;
+    static int aimingEnemyVelocity;
+    double velocityToAimAt;
+    boolean fired;
+    double oldTime;
+    int count;
+    int averageCount;
+    static double fieldXMid;
+    static double fieldYMid;
+    static double EX;
+    static double EY;
+    static double maxBP;
+    static double turn;
+    int dir = 1;
+    double dist = 1000.0D;
+    double cornerX;
+    double cornerY;
+    static double firingAngleMod = 1.0D;
+    static double closestDist = 100.0D;
+    double oldEnemyHeading;
+    static boolean firstTime = true;
+
+    public void run() {
+        this.setBodyColor(Color.red);
+        this.setGunColor(Color.black);
+        this.setRadarColor(Color.yellow);
+        this.setBulletColor(Color.green);
+        this.setScanColor(Color.green);
+        if (firstTime) {
+            this.velocityToAimAt = 4.0D;
+            currentEnemyVelocity = 1;
+        }
+
+        firstTime = false;
+        if (depthChange) {
+            enemyVelocities = new double[depth][4];
+            double var1 = this.velocityToAimAt;
+
+            for(this.count = 0; this.count < 4; ++this.count) {
+                if (this.count != 0 && this.count != 2) {
+                    if (currentEnemyVelocity != 1 && currentEnemyVelocity != 3) {
+                        var1 = -this.velocityToAimAt;
+                    } else {
+                        var1 = this.velocityToAimAt;
+                    }
+                } else if (currentEnemyVelocity != 0 && currentEnemyVelocity != 2) {
+                    var1 = -this.velocityToAimAt;
+                } else {
+                    var1 = this.velocityToAimAt;
+                }
+
+                for(this.averageCount = 0; this.averageCount < depth; ++this.averageCount) {
+                    enemyVelocities[this.averageCount][this.count] = var1;
+                }
+            }
+
+            this.count = 0;
+        }
+
+        depthChange = false;
+        fieldYMid = this.getBattleFieldHeight() / 2.0D;
+        fieldXMid = this.getBattleFieldWidth() / 2.0D;
+        this.setAdjustGunForRobotTurn(true);
+        this.setAdjustRadarForGunTurn(true);
+
+        while(true) {
+            this.turnRadarRightRadians(1.0D / 0.0);
+        }
+    }
+
+    public void onScannedRobot(ScannedRobotEvent var1) {
+        maxBP = 3.0D;
+        if (var1.getDistance() > 200.0D) {
+            maxBP = 2.4D;
+        }
+
+        double var2 = Math.min(maxBP, Math.min(this.getEnergy() / 10.0D, var1.getEnergy() / 4.0D));
+        double var4 = 20.0D - 3.0D * var2;
+        double var6 = var1.getBearingRadians() + this.getHeadingRadians();
+        Graphics2D var8 = this.getGraphics();
+        EX = this.getX() + var1.getDistance() * Math.sin(var6);
+        EY = this.getY() + var1.getDistance() * Math.cos(var6);
+        if (var1.getVelocity() < -2.0D) {
+            currentEnemyVelocity = 0;
+        } else if (var1.getVelocity() > 2.0D) {
+            currentEnemyVelocity = 1;
+        } else if (var1.getVelocity() <= 2.0D && var1.getVelocity() >= -2.0D) {
+            if (currentEnemyVelocity == 0) {
+                currentEnemyVelocity = 2;
+            } else if (currentEnemyVelocity == 1) {
+                currentEnemyVelocity = 3;
+            }
+        }
+
+        if ((double)this.getTime() - this.oldTime > var1.getDistance() / 12.8D && this.fired) {
+            aimingEnemyVelocity = currentEnemyVelocity;
+        } else {
+            this.fired = false;
+        }
+
+        enemyVelocities[this.count][aimingEnemyVelocity] = var1.getVelocity();
+        ++this.count;
+        if (this.count == depth) {
+            this.count = 0;
+        }
+
+        this.averageCount = 0;
+
+        for(this.velocityToAimAt = 0.0D; this.averageCount < depth; ++this.averageCount) {
+            this.velocityToAimAt += enemyVelocities[this.averageCount][currentEnemyVelocity];
+        }
+
+        this.velocityToAimAt /= (double)depth;
+        double var9 = var1.getHeadingRadians();
+        double var11 = var9 - this.oldEnemyHeading;
+        this.oldEnemyHeading = var9;
+        double var13 = 0.0D;
+        double var15 = EX;
+
+        double var17;
+        for(var17 = EY; ++var13 * var4 < Double.distance(this.getX(), this.getY(), var15, var17); var17 = Math.min(var17, this.getBattleFieldHeight() - 18.0D)) {
+            var15 += Math.sin(var9) * this.velocityToAimAt;
+            var17 += Math.cos(var9) * this.velocityToAimAt;
+            var9 += var11;
+            var8.setColor(Color.red);
+            var8.fillOval((int)var15 - 2, (int)var17 - 2, 4, 4);
+            var15 = Math.max(var15, 18.0D);
+            var17 = Math.max(var17, 18.0D);
+            var15 = Math.min(var15, this.getBattleFieldWidth() - 18.0D);
+        }
+
+        double var19 = Utils.normalAbsoluteAngle(Math.atan2(var15 - this.getX(), var17 - this.getY()));
+        this.setTurnGunRightRadians(Utils.normalRelativeAngle(var19 - this.getGunHeadingRadians()));
+        this.setFire(2.0D);
+        if (EX > fieldXMid) {
+            this.cornerX = this.getBattleFieldWidth();
+        } else {
+            this.cornerX = 0.0D;
+        }
+
+        if (EY > fieldYMid) {
+            this.cornerY = this.getBattleFieldHeight();
+        } else {
+            this.cornerY = 0.0D;
+        }
+
+        double var21 = Math.sqrt(Math.pow(EX - this.cornerX, 2.0D) + Math.pow(EY - this.cornerY, 2.0D));
+        double var23 = Utils.normalAbsoluteAngle(Math.atan2(EX - this.cornerX, EY - this.cornerY));
+        double var25 = this.cornerX + (var21 + this.dist) * Math.sin(var23);
+        double var27 = this.cornerY + (var21 + this.dist) * Math.cos(var23);
+        var25 = Math.max(18.0D, var25);
+        var25 = Math.min(this.getBattleFieldWidth() - 20.0D, var25);
+        var27 = Math.max(18.0D, var27);
+        var27 = Math.min(this.getBattleFieldHeight() - 20.0D, var27);
+        double var29 = this.getX() + 100.0D * Math.sin(this.getHeadingRadians());
+        double var31 = this.getY() + 100.0D * Math.cos(this.getHeadingRadians());
+        double var33 = this.getX() - 100.0D * Math.sin(this.getHeadingRadians());
+        double var35 = this.getY() - 100.0D * Math.cos(this.getHeadingRadians());
+        double var37 = Math.sqrt(Math.pow(var29 - var25, 2.0D) + Math.pow(var31 - var27, 2.0D));
+        double var39 = Math.sqrt(Math.pow(var33 - var25, 2.0D) + Math.pow(var35 - var27, 2.0D));
+        if (var37 > var39) {
+            this.dir = -1;
+        } else {
+            this.dir = 1;
+        }
+
+        var8.setColor(Color.red);
+        var8.fillOval((int)var25 - 5, (int)var27 - 5, 10, 10);
+        var8.setColor(Color.white);
+        var8.fillOval((int)var25 - 4, (int)var27 - 4, 8, 8);
+        var8.setColor(Color.red);
+        var8.fillOval((int)var25 - 3, (int)var27 - 3, 6, 6);
+        if (this.getX() > var25 - 18.0D && this.getX() < var25 + 18.0D && this.getY() > var27 - 18.0D && this.getY() < var27 + 18.0D) {
+            this.dist -= 50.0D;
+        }
+
+        this.dist = Math.min(this.dist, var1.getDistance());
+        this.dist = Math.max(this.dist, closestDist);
+        double var41 = Utils.normalAbsoluteAngle(Math.atan2(var25 - this.getX(), var27 - this.getY()));
+        if (this.dir == -1) {
+            var25 = this.getX() - 100.0D * Math.sin(var41);
+            var27 = this.getY() - 100.0D * Math.cos(var41);
+        }
+
+        turn = Utils.normalAbsoluteAngle(Math.atan2(var25 - this.getX(), var27 - this.getY()));
+        this.setAhead((double)(100 * this.dir));
+        this.setTurnRightRadians(Utils.normalRelativeAngle(turn - this.getHeadingRadians()));
+        this.setTurnRadarRightRadians(Utils.normalRelativeAngle(var6 - this.getRadarHeadingRadians()) * 2.0D);
+    }
+
+    public void onDeath(DeathEvent var1) {
+        closestDist = Math.max(50.0D, 600.0D * Math.random());
+        if (Math.random() > 0.5D) {
+            closestDist = Math.max(50.0D, 150.0D * Math.random());
+        }
+
+        depth = (int)(400.0D * Math.random());
+        depthChange = true;
+    }
+}
